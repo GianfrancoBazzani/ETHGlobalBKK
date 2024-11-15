@@ -9,9 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dynamic-labs/ethereum": "^3.6.3",
+    "@dynamic-labs/sdk-react-core": "^3.6.3",
+    "@react-three/fiber": "^8.17.10",
+    "flowbite-react": "^0.10.2",
+    "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
-    "next": "15.0.3"
+    "three": "^0.170.0",
+    "viem": "^2.21.45"
   },
   "devDependencies": {
     "postcss": "^8",
