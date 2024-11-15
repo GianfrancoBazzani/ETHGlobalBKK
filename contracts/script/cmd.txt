@@ -1,0 +1,8 @@
+forge script script/Deploy.s.sol --rpc-url https://l1sload-rpc.scroll.io --broadcast
+
+forge script script/Interact.s.sol --rpc-url https://l1sload-rpc.scroll.io
+
+forge script script/DeployL1.s.sol --ffi --rpc-url $SEPOLIA_RPC_URL \
+    --etherscan-api-key ${ETHERSCAN_API_KEY} --slow --broadcast --verify -vvvv --via-ir
+
+forge script script/DeployL2.s.sol --rpc-url $SCROLL_DEVNET --broadcast --private-key $PRIVATE_KEY
