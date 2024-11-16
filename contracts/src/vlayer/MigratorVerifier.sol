@@ -7,6 +7,7 @@ import {MigratorProver} from "./MigratorProver.sol";
 import {IERC20, SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
 import {IMigratorVerifier} from "./interfaces/IMigratorVerifier.sol";
+import {ScrollL1StorageReader} from "../ScrollL1StorageReader.sol";
 
 contract MigratorVerifier is Verifier, IMigratorVerifier {
     using SafeERC20 for IERC20;
@@ -22,6 +23,7 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
     }
 
     // *** Constants & Immutables *** \\\
+    uint256 private constant LOCKED_VALUE_BY_USER_SLOT = 0;
     uint256 private constant ONE_SCALED = 1e18;
     uint256 private constant MINIMAL_MIGRATION_DURATION = 1 days;
 
@@ -110,17 +112,21 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         require(endMigrationTimestamp > block.timestamp, BonusMigrationEnded());
 
         uint256 timeBonus = getUserTimeBonus(averageBalance);
-        uint256 loyaltyBonus = getUserTimeBonus(averageBalance);
+        uint256 loyaltyBonus = getUserLoyaltyBonus(averageBalance);
 
-        uint256 l1LockedAmount = 0; // Read it from the L1
+        uint256 l1LockedAmount = uint256(
+            ScrollL1StorageReader.sloadValueFromSecondLevelSlot(l1Migrator, LOCKED_VALUE_BY_USER_SLOT, uint160(user))
+        );
 
         // Invariant should never happen
-        assert(l1LockedAmount >= userMigrationInformation[msg.sender].usedLockedAmount);
-        uint256 totalAmountToSend = l1LockedAmount + timeBonus + loyaltyBonus;
+        uint256 usedLockedAmount = userMigrationInformation[msg.sender].usedLockedAmount;
+        assert(l1LockedAmount >= usedLockedAmount);
+
+        uint256 l1AdjustedAmount = l1LockedAmount - usedLockedAmount;
+        uint256 totalAmountToSend = l1AdjustedAmount + timeBonus + loyaltyBonus;
 
         userMigrationInformation[msg.sender].isMigrated = true;
-        userMigrationInformation[msg.sender].usedLockedAmount +=
-            SafeCast.toUint248(l1LockedAmount - userMigrationInformation[msg.sender].usedLockedAmount);
+        userMigrationInformation[msg.sender].usedLockedAmount += SafeCast.toUint248(l1AdjustedAmount);
 
         l2Token.safeTransfer(msg.sender, totalAmountToSend);
     }

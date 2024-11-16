@@ -2,22 +2,10 @@
 pragma solidity 0.8.28;
 
 import {BridgedToken} from "./BridgedToken.sol";
-
-interface IL1Blocks {
-    function latestBlockNumber() external view returns (uint256);
-}
-
-interface IERC20 {
-    function mint(address to, uint256 amount) external;
-}
+import {IL1Blocks} from "./interfaces/IL1Blocks.sol";
+import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
 
 contract L2BridgeChecker {
-    address constant L1_BLOCKS_ADDRESS =
-        0x5300000000000000000000000000000000000001;
-    address constant L1_SLOAD_ADDRESS =
-        0x0000000000000000000000000000000000000101;
-    address immutable l1BridgeAddress;
-
     struct Migration {
         address l1Token;
         address l2Token;
@@ -27,6 +15,10 @@ contract L2BridgeChecker {
         uint256 startTimestamp;
         uint256 endTimestamp;
     }
+
+    address private constant L1_BLOCKS_ADDRESS = 0x5300000000000000000000000000000000000001;
+    address private constant L1_SLOAD_ADDRESS = 0x0000000000000000000000000000000000000101;
+    address private immutable l1BridgeAddress;
 
     mapping(address => Migration) public migrations;
 
@@ -39,12 +31,7 @@ contract L2BridgeChecker {
         uint256 startTimestamp,
         uint256 endTimestamp
     );
-    event TokensMinted(
-        address indexed l1Token,
-        address indexed l2Token,
-        address indexed user,
-        uint256 amount
-    );
+    event TokensMinted(address indexed l1Token, address indexed l2Token, address indexed user, uint256 amount);
     event L2TokenDeployed(address indexed l2Token, string name, string symbol);
 
     constructor(address _l1BridgeAddress) {
@@ -87,13 +74,7 @@ contract L2BridgeChecker {
         });
 
         emit MigrationRegistered(
-            l1Token,
-            l2Token,
-            rewardsToken,
-            bridgeMultiplier,
-            holdMultiplier,
-            startTimestamp,
-            endTimestamp
+            l1Token, l2Token, rewardsToken, bridgeMultiplier, holdMultiplier, startTimestamp, endTimestamp
         );
     }
 
@@ -114,9 +95,7 @@ contract L2BridgeChecker {
      * @param token The address of the token.
      * @return bytes32 The calculated first-level storage slot.
      */
-    function _calculateFirstLevelSlot(
-        address token
-    ) public pure returns (bytes32) {
+    function _calculateFirstLevelSlot(address token) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(token, uint256(0)));
     }
 
@@ -131,10 +110,7 @@ contract L2BridgeChecker {
      * @param user The address of the user (inner mapping key).
      * @return bytes32 The calculated second-level storage slot.
      */
-    function _calculateSecondLevelSlot(
-        address token,
-        address user
-    ) public pure returns (bytes32) {
+    function _calculateSecondLevelSlot(address token, address user) public pure returns (bytes32) {
         bytes32 firstLevelSlot = _calculateFirstLevelSlot(token);
         return keccak256(abi.encodePacked(user, firstLevelSlot));
     }
@@ -145,20 +121,12 @@ contract L2BridgeChecker {
      * @param user The address of the user.
      * @return The amount of locked funds.
      */
-    function getLockedFundsFromL1(
-        address l1Token,
-        address user
-    ) public view returns (uint256) {
+    function getLockedFundsFromL1(address l1Token, address user) public view returns (uint256) {
         // Calculate the storage slot: keccak256(abi.encodePacked(user, keccak256(abi.encodePacked(token, slot))))
         uint256 slot = uint256(
             keccak256(
                 abi.encodePacked(
-                    uint(uint160(user)),
-                    uint(
-                        keccak256(
-                            abi.encodePacked(uint(uint160(l1Token)), uint256(0))
-                        )
-                    )
+                    uint256(uint160(user)), uint256(keccak256(abi.encodePacked(uint256(uint160(l1Token)), uint256(0))))
                 )
             )
         );
@@ -167,9 +135,7 @@ contract L2BridgeChecker {
         bytes memory input = abi.encodePacked(l1BridgeAddress, slot);
 
         // Perform the L1SLOAD call
-        (bool success, bytes memory result) = L1_SLOAD_ADDRESS.staticcall(
-            input
-        );
+        (bool success, bytes memory result) = L1_SLOAD_ADDRESS.staticcall(input);
         require(success, "L1SLOAD failed");
 
         // Decode the result as a uint256
@@ -188,8 +154,7 @@ contract L2BridgeChecker {
         require(migration.l2Token != address(0), "Migration not registered");
 
         require(
-            block.timestamp >= migration.startTimestamp &&
-                block.timestamp <= migration.endTimestamp,
+            block.timestamp >= migration.startTimestamp && block.timestamp <= migration.endTimestamp,
             "Migration window closed"
         );
 
@@ -200,19 +165,14 @@ contract L2BridgeChecker {
         uint256 rewards = (lockedAmount * migration.bridgeMultiplier) / 1e18;
 
         // Mint the bridged tokens
-        IERC20(migration.l2Token).mint(user, lockedAmount);
+        IERC20Mintable(migration.l2Token).mint(user, lockedAmount);
 
         // Mint the rewards tokens (if different)
         if (migration.rewardsToken != migration.l2Token) {
-            IERC20(migration.rewardsToken).mint(user, rewards);
+            IERC20Mintable(migration.rewardsToken).mint(user, rewards);
         }
 
-        emit TokensMinted(
-            l1Token,
-            migration.l2Token,
-            user,
-            lockedAmount + rewards
-        );
+        emit TokensMinted(l1Token, migration.l2Token, user, lockedAmount + rewards);
     }
 
     /**
@@ -220,10 +180,7 @@ contract L2BridgeChecker {
      * @param name The name of the L2 token.
      * @param symbol The symbol of the L2 token.
      */
-    function deployBridgedToken(
-        string memory name,
-        string memory symbol
-    ) external {
+    function deployBridgedToken(string memory name, string memory symbol) external {
         address l2Token = address(new BridgedToken(name, symbol));
         emit L2TokenDeployed(l2Token, name, symbol);
     }
