@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "flowbite-react";
-import { Label, TextInput, RangeSlider } from "flowbite-react";
+import { Label, TextInput } from "flowbite-react";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
-import { Datepicker } from "flowbite-react";
 import { L2BridgeCheckerABI } from "../lib/abis/L2BridgeCheckerABI";
 import { ethers } from "ethers";
 import {
@@ -12,6 +11,7 @@ import {
     useWaitForTransactionReceipt,
     useWriteContract,
 } from "wagmi";
+import MigrationCreationMenu from "../components/MigrationMenu";
 
 function copyToClipboard(text: string) {
     if (!text) {
@@ -76,114 +76,10 @@ export default function Migrate() {
         handleTransaction();
     }, [txHash]);
 
-
-
     return (
         <div className="flex flex-row">
-            <div className="flex flex-col mt-2 p-4 gap-4 w-1/2">
-                <h2 className="text-2xl font-bold text-purple-300">
-                    Migration Creation Menu
-                </h2>
-                {/* To*/}
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                className=" text-purple-300 "
-                                htmlFor="To"
-                                value="L1 ERC20 Token Address"
-                            />
-                        </div>
-                        <TextInput id="To" type="text" sizing="md" />
-                    </div>
-                </div>
-
-                {/* Tb*/}
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                className=" text-purple-300 "
-                                htmlFor="Tb"
-                                value="Scroll ERC20 Token Address"
-                            />
-                        </div>
-                        <TextInput id="Tb" type="text" sizing="md" />
-                    </div>
-                </div>
-
-                {/* Tr*/}
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                className=" text-purple-300 "
-                                htmlFor="Tr"
-                                value="Scroll ERC20 Rewards Token Address"
-                            />
-                        </div>
-                        <TextInput id="Tr" type="text" sizing="md" />
-                    </div>
-                </div>
-
-                {/* Bridge Multiplier*/}
-                <div className=" flex flex-row gap-4 w-full  justify-between pr-4 ">
-                    <div className="mb-1 block  ">
-                        <Label
-                            className=" text-purple-300 "
-                            htmlFor="bridge-multiplier"
-                            value="Rewards Bridge Multiplier"
-                        />
-                    </div>
-                    <RangeSlider className="" id="bridge-multiplier" /> <div>0.1</div>
-                </div>
-
-                {/* Hold Multiplier*/}
-                <div className=" flex flex-row gap-4 w-full  justify-between pr-4 ">
-                    <div className="mb-1 block  ">
-                        <Label
-                            className=" text-purple-300 "
-                            htmlFor="hold-multiplier"
-                            value="Rewards Hold Multiplier"
-                        />
-                    </div>
-                    <RangeSlider className="" id="hold-multiplier" /> <div>0.1</div>
-                </div>
-
-                {/* bridge window*/}
-                <div className=" flex flex-row gap-4 w-full  justify-between pr-4 ">
-                    <div className="mb-1 block  ">
-                        <Label
-                            className=" text-purple-300 "
-                            htmlFor="bridge-window"
-                            value="Bonus Bridge Window"
-                        />
-                    </div>
-                    <div className="flex flex-row gap-4">
-                        <Datepicker /> to <Datepicker />
-                    </div>
-                </div>
-
-                {/* Hold window*/}
-                <div className=" flex flex-row gap-4 w-full  justify-between pr-4 ">
-                    <div className="mb-1 block  ">
-                        <Label
-                            className=" text-purple-300 "
-                            htmlFor="hold-window"
-                            value="Hold Window"
-                        />
-                    </div>
-                    <div className="flex flex-row gap-4">
-                        <Datepicker /> to <Datepicker />
-                    </div>
-                </div>
-                <div className="flex flex-row w-full justify-center">
-                    <Button color="purple" className="w-fit ">
-                        Create Migration
-                    </Button>
-                </div>
-            </div>
-            <div className="flex flex-col mt-2 p-4 gap-4 w-1/2">
+            {/* Left Section: Scroll Token Deployer Menu */}
+            <div className="flex flex-col mt-2 p-4 gap-4 w-1/3 px-16">
                 <h2 className="text-2xl font-bold text-purple-300">
                     Scroll Token Deployer menu
                 </h2>
@@ -254,7 +150,7 @@ export default function Migrate() {
                                     />
                                 </div>
                                 {txHash && (
-                                    <div>
+                                    <div className="mb-4">
                                         Tx:{" "}
                                         <a
                                             href={`https://l1sload-blockscout.scroll.io/tx/${txHash}`}
@@ -267,7 +163,6 @@ export default function Migrate() {
                                     </div>
                                 )}
                                 {isConfirming && <div>Waiting for confirmation...</div>}
-                                {isConfirmed && <div>Transaction confirmed.</div>}
                                 <div className="flex items-center gap-2 w-full">
                                     <TextInput
                                         disabled
@@ -289,6 +184,9 @@ export default function Migrate() {
                     </div>
                 </div>
             </div>
+
+            {/* Right Section: Migration Creation Menu */}
+            <MigrationCreationMenu />
         </div>
     );
 }
