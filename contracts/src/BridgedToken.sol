@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import "@openzeppelin/token/ERC20/ERC20.sol";
 
+/// @title The default token implementation for migrator compatibility
 contract BridgedToken is ERC20 {
     address public bridge;
 
