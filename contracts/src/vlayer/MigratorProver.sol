@@ -29,11 +29,9 @@ contract MigratorProver is Prover, IMigratorProver {
         );
 
         // Check that the token has been deployed at the moment of {_startBlockForAccounting}
-        setBlock(_startBlockForAccounting);
-        try _migratedToken.totalSupply() returns (uint256) {}
-        catch {
-            revert TokenDoesNotExistAtTheAccountingStartBlock();
-        }
+        verifyTokenExistenceAtTheBlock(_migratedToken, _startBlockForAccounting);
+        // Check that token wasn't destructed after the start of accounting block
+        verifyTokenExistenceAtTheBlock(_migratedToken, _endBlockForAccounting);
 
         migratedToken = _migratedToken;
         startBlockForAccounting = _startBlockForAccounting;
@@ -46,11 +44,12 @@ contract MigratorProver is Prover, IMigratorProver {
 
         uint256 cumulativeBalance;
 
-        for (uint256 currentBlock = startBlockForAccounting; currentBlock < endBlockForAccounting; currentBlock++) {
+        for (uint256 currentBlock = startBlockForAccounting; currentBlock <= endBlockForAccounting; currentBlock++) {
             setBlock(currentBlock);
             cumulativeBalance += migratedToken.balanceOf(user);
         }
-        uint256 userAverageBalance = cumulativeBalance / (endBlockForAccounting - startBlockForAccounting);
+        // Include start and end blocks in the calculation
+        uint256 userAverageBalance = cumulativeBalance / (endBlockForAccounting - startBlockForAccounting + 1);
 
         require(
             userAverageBalance >= minimalAverageBalanceForBonusEligibility,
@@ -58,5 +57,13 @@ contract MigratorProver is Prover, IMigratorProver {
         );
 
         return (proof(), user, userAverageBalance);
+    }
+
+    function verifyTokenExistenceAtTheBlock(IERC20 token, uint256 blockNumber) private {
+        setBlock(blockNumber);
+        try token.totalSupply() returns (uint256) {}
+        catch {
+            revert TokenDoesNotExistAtTheBlock(blockNumber);
+        }
     }
 }
