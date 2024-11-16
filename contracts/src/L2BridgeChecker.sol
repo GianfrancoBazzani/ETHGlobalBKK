@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.28;
 
 import {BridgedToken} from "./BridgedToken.sol";
 
@@ -12,22 +12,15 @@ interface IERC20 {
 }
 
 contract L2BridgeChecker {
-    address constant L1_BLOCKS_ADDRESS =
-        0x5300000000000000000000000000000000000001;
-    address constant L1_SLOAD_ADDRESS =
-        0x0000000000000000000000000000000000000101;
+    address constant L1_BLOCKS_ADDRESS = 0x5300000000000000000000000000000000000001;
+    address constant L1_SLOAD_ADDRESS = 0x0000000000000000000000000000000000000101;
     address immutable l1BridgeAddress;
 
     // Mapping: L1 Token -> L2 Token
     mapping(address => address) public tokenMappings;
 
     event TokenMapped(address indexed l1Token, address indexed l2Token);
-    event TokensMinted(
-        address indexed l1Token,
-        address indexed l2Token,
-        address indexed user,
-        uint256 amount
-    );
+    event TokensMinted(address indexed l1Token, address indexed l2Token, address indexed user, uint256 amount);
     event L2TokenDeployed(address indexed l2Token, string name, string symbol);
 
     constructor(address _l1BridgeAddress) {
@@ -41,10 +34,7 @@ contract L2BridgeChecker {
      * @param l2Token The address of the corresponding token on L2.
      */
     function mapToken(address l1Token, address l2Token) external {
-        require(
-            l1Token != address(0) && l2Token != address(0),
-            "Invalid token address"
-        );
+        require(l1Token != address(0) && l2Token != address(0), "Invalid token address");
         require(tokenMappings[l1Token] == address(0), "Token already mapped");
         tokenMappings[l1Token] = l2Token;
 
@@ -59,21 +49,53 @@ contract L2BridgeChecker {
     }
 
     /**
+     * @dev Calculate the first-level storage slot for a token in the `lockedFunds` mapping.
+     * This function computes the hash of the token address and the root slot (0 in this case).
+     *
+     * The calculation follows the Solidity storage layout rules for mappings:
+     * keccak256(abi.encodePacked(key, root_slot))
+     *
+     * @param token The address of the token.
+     * @return bytes32 The calculated first-level storage slot.
+     */
+    function _calculateFirstLevelSlot(
+        address token
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(token, uint256(0)));
+    }
+
+    /**
+     * @dev Calculate the second-level storage slot for a user in the `lockedFunds` mapping.
+     * This function computes the hash of the user address and the first-level slot.
+     *
+     * The calculation follows the Solidity storage layout rules for nested mappings:
+     * keccak256(abi.encodePacked(inner_key, keccak256(abi.encodePacked(outer_key, root_slot))))
+     *
+     * @param token The address of the token (outer mapping key).
+     * @param user The address of the user (inner mapping key).
+     * @return bytes32 The calculated second-level storage slot.
+     */
+    function _calculateSecondLevelSlot(
+        address token,
+        address user
+    ) public pure returns (bytes32) {
+        bytes32 firstLevelSlot = _calculateFirstLevelSlot(token);
+        return keccak256(abi.encodePacked(user, firstLevelSlot));
+    }
+
+    /**
      * @dev Get locked funds from L1 for a specific token and user.
      * @param l1Token The address of the token on L1.
      * @param user The address of the user.
      * @return The amount of locked funds.
      */
-    function getLockedFundsFromL1(
-        address l1Token,
-        address user
-    ) public view returns (uint256) {
+    function getLockedFundsFromL1(address l1Token, address user) public view returns (uint256) {
         // Calculate the storage slot: keccak256(abi.encodePacked(user, keccak256(abi.encodePacked(token, slot))))
         uint256 slot = uint256(
             keccak256(
                 abi.encodePacked(
-                    user,
-                    uint256(keccak256(abi.encodePacked(l1Token, uint256(0))))
+                    uint(uint160(user)),
+                    uint(keccak256(abi.encodePacked(uint(uint160(l1Token)), uint256(0))))
                 )
             )
         );
@@ -82,9 +104,7 @@ contract L2BridgeChecker {
         bytes memory input = abi.encodePacked(l1BridgeAddress, slot);
 
         // Perform the L1SLOAD call
-        (bool success, bytes memory result) = L1_SLOAD_ADDRESS.staticcall(
-            input
-        );
+        (bool success, bytes memory result) = L1_SLOAD_ADDRESS.staticcall(input);
         require(success, "L1SLOAD failed");
 
         // Decode the result as a uint256
@@ -119,6 +139,4 @@ contract L2BridgeChecker {
         address l2Token = address(new BridgedToken(name, symbol));
         emit L2TokenDeployed(l2Token, name, symbol);
     }
-
-    
 }
