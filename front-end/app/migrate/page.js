@@ -4,15 +4,32 @@ import React, { useState } from "react"; // Import useState
 import { Button } from "flowbite-react";
 import { Label, TextInput, RangeSlider } from "flowbite-react";
 import { Datepicker } from "flowbite-react";
-import { useWriteContract } from 'wagmi'
 import { L2BridgeCheckerABI } from "../lib/abis/L2BridgeCheckerABI.js";
+// import { useAccount } from "wagmi";
+// import { useNetwork } from 'wagmi'
+import { usePrepareContractWrite } from "wagmi";
 
 export default function Migrate() {
-  const { writeContract } = useWriteContract()
-
   // State hooks for inputs
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
+
+  const { config, error } = usePrepareContractWrite({
+    address: process.env.NEXT_PUBLIC_L2_BRIDGE_CHECKER_ADDRESS,
+    abi: L2BridgeCheckerABI,
+    functionName: "deployBridgedToken",
+  });
+  const { write } = useContractWrite(config);
+
+  //const deployToken = async () => {
+  //  const walletClient = createWalletClient({
+  //    chain: chain,
+  //    transport: custom(window.ethereum),
+  //  })
+  //  console.log(walletClient)
+  //  console.log(name);
+  //  console.log(symbol);
+  //};
 
   return (
     <div className="flex flex-row">
@@ -166,18 +183,8 @@ export default function Migrate() {
           <Button
             color="purple"
             className="w-fit"
-            onClick={() =>
-              console.log("asdfasdf")
-              //writeContract({ 
-              //  L2BridgeCheckerABI,
-              //  address: process.env.NEXT_PUBLIC_L2_BRIDGE_ADDRESS,
-              //  functionName: 'deployBridgedToken',
-              //  args: [
-              //    name,
-              //    symbol,
-              //  ],
-             //})
-            }
+            disabled={!write}
+            onClick={() => write?.()}
           >
             Deploy Token
           </Button>
