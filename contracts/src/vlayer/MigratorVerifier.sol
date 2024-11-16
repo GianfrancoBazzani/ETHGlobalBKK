@@ -112,19 +112,21 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         require(endMigrationTimestamp > block.timestamp, BonusMigrationEnded());
 
         uint256 timeBonus = getUserTimeBonus(averageBalance);
-        uint256 loyaltyBonus = getUserTimeBonus(averageBalance);
+        uint256 loyaltyBonus = getUserLoyaltyBonus(averageBalance);
 
         uint256 l1LockedAmount = uint256(
             ScrollL1StorageReader.sloadValueFromSecondLevelSlot(l1Migrator, LOCKED_VALUE_BY_USER_SLOT, uint160(user))
         );
 
         // Invariant should never happen
-        assert(l1LockedAmount >= userMigrationInformation[msg.sender].usedLockedAmount);
-        uint256 totalAmountToSend = l1LockedAmount + timeBonus + loyaltyBonus;
+        uint256 usedLockedAmount = userMigrationInformation[msg.sender].usedLockedAmount;
+        assert(l1LockedAmount >= usedLockedAmount);
+
+        uint256 l1AdjustedAmount = l1LockedAmount - usedLockedAmount;
+        uint256 totalAmountToSend = l1AdjustedAmount + timeBonus + loyaltyBonus;
 
         userMigrationInformation[msg.sender].isMigrated = true;
-        userMigrationInformation[msg.sender].usedLockedAmount +=
-            SafeCast.toUint248(l1LockedAmount - userMigrationInformation[msg.sender].usedLockedAmount);
+        userMigrationInformation[msg.sender].usedLockedAmount += SafeCast.toUint248(l1AdjustedAmount);
 
         l2Token.safeTransfer(msg.sender, totalAmountToSend);
     }
