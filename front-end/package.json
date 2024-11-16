@@ -9,13 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.0",
     "@react-three/fiber": "^8.17.10",
+    "@tanstack/react-query": "^5.60.5",
     "flowbite-react": "^0.10.2",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "three": "^0.170.0",
-    "viem": "^2.21.45",
+    "viem": "2.x",
     "wagmi": "^2.12.33"
   },
   "devDependencies": {

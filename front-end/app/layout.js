@@ -1,9 +1,41 @@
 "use client";
 import localFont from "next/font/local";
-import { DynamicContextProvider, DynamicWidget } from "./lib/dynamic";
-import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+import { WagmiProvider } from "wagmi";
+import {
+  getDefaultConfig,
+  RainbowKitProvider,
+  darkTheme,
+} from "@rainbow-me/rainbowkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { http } from "viem";
+import { sepolia, scrollSepolia } from "viem/chains";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import "./globals.css";
+import "@rainbow-me/rainbowkit/styles.css";
 import Link from "next/link";
+
+import { defineChain } from "viem";
+
+export const scrollDevnet = defineChain({
+  id: 2227728,
+  name: "Scroll Devnet",
+  nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://l1sload-rpc.scroll.io"] },
+  },
+  blockExplorers: {
+    default: { name: "BLockscout", url: "https://l1sload-blockscout.scroll.io" },
+  }
+});
+
+const config = getDefaultConfig({
+  appName: "My RainbowKit App",
+  projectId: "YOUR_PROJECT_ID",
+  chains: [sepolia, scrollSepolia, scrollDevnet],
+  ssr: false,
+});
+
+const queryClient = new QueryClient();
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -17,7 +49,7 @@ const geistMono = localFont({
 });
 
 //export const metadata = {
-//  title: "Nomadica",
+//  title: "MigratoooOooOoOR!",
 //  description: "Scroll Community Migration App",
 //};
 
@@ -27,27 +59,48 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DynamicContextProvider
-          settings={{
-            environmentId: "57bc695d-32c1-4eec-87d1-d69ba0941f68",
-            walletConnectors: [EthereumWalletConnectors],
-          }}
-        >
-          <div className="flex justify-between items-center">
-            <nav className="flex gap-6 p-4">
-              <Link href="/bridge" className="text-purple-300 hover:text-pink-500 transition duration-300 ease-in-out font-bold text-lg">Bridge</Link>
-              <Link href="/claim" className="text-purple-300 hover:text-pink-500 transition duration-300 ease-in-out font-bold text-lg">Claim</Link>
-              <Link href="/migrate" className="text-purple-300 hover:text-pink-500 transition duration-300 ease-in-out font-bold text-lg">Migrate</Link>
-            </nav>
-            <div className="flex m-2">
-              <DynamicWidget variant="modal" />
-            </div>
-          </div>
-          <hr className="border-t border-purple-300 border-1" />
-          {children}
-          <hr className="border-t border-purple-300 border-1" />
-
-        </DynamicContextProvider>
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowKitProvider
+              theme={darkTheme({
+                accentColor: "#7b3fe4",
+                accentColorForeground: "white",
+                borderRadius: "small",
+                fontStack: "system",
+                overlayBlur: "small",
+              })}
+            >
+              <div className="flex justify-between items-center">
+                <nav className="flex gap-6 p-4">
+                  <Link
+                    href="/bridge"
+                    className="text-purple-300 hover:text-pink-500 transition duration-300 ease-in-out font-bold text-lg"
+                  >
+                    Bridge
+                  </Link>
+                  <Link
+                    href="/claim"
+                    className="text-purple-300 hover:text-pink-500 transition duration-300 ease-in-out font-bold text-lg"
+                  >
+                    Claim
+                  </Link>
+                  <Link
+                    href="/migrate"
+                    className="text-purple-300 hover:text-pink-500 transition duration-300 ease-in-out font-bold text-lg"
+                  >
+                    Migrate
+                  </Link>
+                </nav>
+                <div className="flex m-2">
+                  <ConnectButton />
+                </div>
+              </div>
+              <hr className="border-t border-purple-300 border-1" />
+              {children}
+              <hr className="border-t border-purple-300 border-1" />
+            </RainbowKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       </body>
     </html>
   );
