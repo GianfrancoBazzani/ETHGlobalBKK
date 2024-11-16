@@ -4,9 +4,12 @@ out = "out"
 libs = ["lib", "dependencies"]
 solc = "0.8.28"
 via_ir = true
+evm_version = 'cancun'
+
 [fuzz]
 runs = 1000000
 max_test_rejects = 1000000
+
 [invariant]
 runs = 10000
 shrink_run_limit = 10000

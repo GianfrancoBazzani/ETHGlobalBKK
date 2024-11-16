@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {BridgedToken} from "./BridgedToken.sol";
-import {IL1Blocks} from "./interfaces/IL1Blocks.sol";
-import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
+import {BridgedToken} from "../BridgedToken.sol";
+import {IL1Blocks} from "../interfaces/IL1Blocks.sol";
+import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
 
 contract L2BridgeChecker {
     struct Migration {
