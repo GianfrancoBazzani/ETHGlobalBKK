@@ -1,18 +1,68 @@
 "use client";
 
-import React, { useState } from "react"; // Import useState
+import React, { useState, useEffect } from "react"; // Import useState
 import { Button } from "flowbite-react";
 import { Label, TextInput, RangeSlider } from "flowbite-react";
 import { Datepicker } from "flowbite-react";
 import { L2BridgeCheckerABI } from "../lib/abis/L2BridgeCheckerABI.js";
-// import { useAccount } from "wagmi";
-// import { useNetwork } from 'wagmi'
-import { usePrepareContractWrite } from "wagmi";
+import { ethers } from "ethers";
+import {
+  usePrepareContractWrite,
+  usePublicClient,
+  useWriteContract,
+} from "wagmi";
 
 export default function Migrate() {
-  // State hooks for inputs
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
+  const [deployedAddress, setDeployedAddress] = useState("");
+
+  const { data: txHash, writeContract, isPending } = useWriteContract();
+  const publicClient = usePublicClient();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({ txHash });
+
+  useEffect(() => {
+    async function handleTransaction() {
+      if (!txHash) return;
+
+      console.log("Transaction sent: ", txHash);
+
+      try {
+        // Wait for the transaction to be mined
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+
+        console.log("Transaction receipt: ", receipt);
+
+        // Decode logs to get the deployed token address
+        const iface = new ethers.utils.Interface(L2BridgeCheckerABI);
+        const eventFragment = iface.getEvent("L2TokenDeployed");
+
+        for (const log of receipt.logs) {
+          try {
+            const decoded = iface.decodeEventLog(
+              eventFragment,
+              log.data,
+              log.topics
+            );
+
+            console.log("Decoded Event: ", decoded);
+            setDeployedAddress(decoded.l2Token);
+            break;
+          } catch (err) {
+            console.log("Skipping log due to decoding error: ", err.message);
+          }
+        }
+      } catch (error) {
+        console.error("Error waiting for transaction: ", error);
+      }
+    }
+
+    handleTransaction();
+  }, [txHash]);
 
   const { config, error } = usePrepareContractWrite({
     address: process.env.NEXT_PUBLIC_L2_BRIDGE_CHECKER_ADDRESS,
@@ -20,16 +70,6 @@ export default function Migrate() {
     functionName: "deployBridgedToken",
   });
   const { write } = useContractWrite(config);
-
-  //const deployToken = async () => {
-  //  const walletClient = createWalletClient({
-  //    chain: chain,
-  //    transport: custom(window.ethereum),
-  //  })
-  //  console.log(walletClient)
-  //  console.log(name);
-  //  console.log(symbol);
-  //};
 
   return (
     <div className="flex flex-row">
@@ -183,10 +223,17 @@ export default function Migrate() {
           <Button
             color="purple"
             className="w-fit"
-            disabled={!write}
-            onClick={() => write?.()}
+            onClick={() => {
+              console.log("asdfasdf");
+              writeContract({
+                L2BridgeCheckerABI,
+                address: process.env.NEXT_PUBLIC_L2_BRIDGE_ADDRESS,
+                functionName: "deployBridgedToken",
+                args: [name, symbol],
+              });
+            }}
           >
-            Deploy Token
+            {isPending ? "Confirming..." : "Deploy Token"}
           </Button>
           <div className="w-full">
             {/* Tb deploy*/}
@@ -199,7 +246,16 @@ export default function Migrate() {
                     value="Scroll Token Address"
                   />
                 </div>
-                <TextInput disabled id="Tb-deploy" type="text" sizing="md" />
+                {txHash && <div>Transaction Hash: {txHash}</div>}
+                {isConfirming && <div>Waiting for confirmation...</div>}
+                {isConfirmed && <div>Transaction confirmed.</div>}
+                <TextInput
+                  disabled
+                  id="Tb-deploy"
+                  type="text"
+                  value={deployedAddress}
+                  sizing="md"
+                />
               </div>
             </div>
           </div>
