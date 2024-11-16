@@ -2,8 +2,9 @@
 pragma solidity 0.8.28;
 
 import {IERC20, SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuardTransient} from "openzeppelin-contracts/utils/ReentrancyGuardTransient.sol";
 
-contract L1Migrator {
+contract L1Migrator is ReentrancyGuardTransient {
     using SafeERC20 for IERC20;
 
     // Mapping: token address => user address => amount locked
@@ -16,7 +17,7 @@ contract L1Migrator {
      * @param token Address of the ERC20 token.
      * @param amount Amount of tokens to lock.
      */
-    function lockFunds(address token, uint256 amount) external {
+    function lockFunds(address token, uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be greater than zero");
         require(token != address(0), "Invalid token address");
 
