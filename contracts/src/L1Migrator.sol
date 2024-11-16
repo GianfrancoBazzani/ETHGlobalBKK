@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-interface IERC20 {
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+import {IERC20, SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
-    function balanceOf(address account) external view returns (uint256);
-}
+contract L1Migrator {
+    using SafeERC20 for IERC20;
 
-contract L1Bridge {
     // Mapping: token address => user address => amount locked
-    mapping(address => mapping(address => uint256)) public lockedFunds;
+    mapping(address token => mapping(address user => uint256 amountLocked)) public lockedFunds;
 
     event FundsLocked(address indexed token, address indexed user, uint256 amount);
 
@@ -22,13 +20,16 @@ contract L1Bridge {
         require(amount > 0, "Amount must be greater than zero");
         require(token != address(0), "Invalid token address");
 
+        uint256 balanceBefore = IERC20(token).balanceOf(address(this));
         // Transfer tokens from user to the bridge
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        uint256 balanceAfter = IERC20(token).balanceOf(address(this));
 
+        uint256 actualAmountLocked = balanceAfter - balanceBefore;
         // Update locked funds mapping
-        lockedFunds[token][msg.sender] += amount;
+        lockedFunds[token][msg.sender] += actualAmountLocked;
 
-        emit FundsLocked(token, msg.sender, amount);
+        emit FundsLocked(token, msg.sender, actualAmountLocked);
     }
 
     /**

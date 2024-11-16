@@ -22,7 +22,6 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
     }
 
     // *** Constants & Immutables *** \\\
-
     uint256 private constant ONE_SCALED = 1e18;
     uint256 private constant MINIMAL_MIGRATION_DURATION = 1 days;
 
