@@ -4,15 +4,18 @@ pragma solidity 0.8.28;
 import {Verifier, Proof} from "vlayer-0.1.0/Verifier.sol";
 import {MigratorProver} from "./MigratorProver.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20, SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {IMigratorVerifier} from "./interfaces/IMigratorVerifier.sol";
 
 contract MigratorVerifier is Verifier, IMigratorVerifier {
+    using SafeERC20 for IERC20;
+
     uint256 private constant ONE_SCALED = 1e18;
     uint256 private constant MINIMAL_MIGRATION_DURATION = 1 days;
     uint256 private constant BASE = 10000;
 
     address private immutable prover;
+    IERC20 private immutable l2Token;
     uint256 private immutable baseTimeMultiplier;
     uint256 private immutable totalMigrationDuration;
     uint256 private immutable startMigrationTimestamp;
@@ -30,6 +33,7 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         uint256 _endMigrationTimestamp,
         uint256 _baseTimeMultiplier,
         IERC20 _migratedToken,
+        IERC20 _l2Token,
         uint256 _startBlockForAccounting,
         uint256 _endBlockForAccounting,
         uint256 _minimalAverageBalanceForBonusEligibility,
@@ -47,6 +51,9 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
 
         uint256 migrationDuration = _endMigrationTimestamp - _startMigrationTimestamp;
         require(migrationDuration > MINIMAL_MIGRATION_DURATION, MigrationDurationTooSmall());
+
+        // Sanity check that token exists
+        _l2Token.totalSupply();
 
         // If project wants to set the bonus based on average balance to the constant for every user
         // then they will provide array with 1 element where the rangeStartAmount is 0 and the multiplier is some value
@@ -76,6 +83,7 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         totalMigrationDuration = migrationDuration;
 
         bonusRanges = _bonusRanges;
+        l2Token = _l2Token;
     }
 
     function completeMigration(Proof memory, address user, uint256 averageBalance)
@@ -88,7 +96,9 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         uint256 timeBonus = getUserTimeBonus(averageBalance);
         uint256 loyaltyBonus = getUserTimeBonus(averageBalance);
 
-        notImplemented();
+        uint256 l1LockedAmount = 0; // Read it from the L1
+        uint256 totalAmountToSend = l1LockedAmount + timeBonus + loyaltyBonus;
+        l2Token.safeTransfer(msg.sender, totalAmountToSend);
     }
 
     function getUserTimeBonus(uint256 usersAverageBalance) public view returns (uint256) {
@@ -151,12 +161,5 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
 
     function getBonusRanges() external view returns (BonusRange[] memory) {
         return bonusRanges;
-    }
-
-    // TODO: remove when everything is implemented
-    error NOT_YET_IMPLEMENTED();
-
-    function notImplemented() private {
-        revert NOT_YET_IMPLEMENTED();
     }
 }
