@@ -32,7 +32,7 @@ export default function Migrate() {
     const { data: txHash, writeContract, isPending } = useWriteContract();
     const publicClient = usePublicClient();
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    const { isLoading: isConfirming } =
         useWaitForTransactionReceipt({ hash: txHash });
 
     useEffect(() => {

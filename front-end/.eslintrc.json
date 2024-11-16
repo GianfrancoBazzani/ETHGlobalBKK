@@ -4,9 +4,17 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier"
+    "prettier",
+    "next/core-web-vitals"
   ],
   "rules": {
-    "@typescript-eslint/no-unused-expressions": "off"
+    "@typescript-eslint/no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": true,
+        "allowTernary": true,
+        "allowTaggedTemplates": true
+      }
+    ]
   }
 }

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button, Label, TextInput } from "flowbite-react";
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { L1BridgeABI } from "../lib/abis/L1BridgeABI";
 import { L2BridgeCheckerABI } from "../lib/abis/L2BridgeCheckerABI";
 
@@ -13,9 +13,9 @@ export default function BridgePage() {
     const [migrationId, setMigrationId] = useState("");
     const { address } = useAccount();
 
-    const { data: txHash, writeContract, isPending } = useWriteContract();
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({ hash: txHash });
+    const { writeContract } = useWriteContract();
+    // const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    //     useWaitForTransactionReceipt({ hash: txHash });
 
     const handleLockFunds = async () => {
         try {
