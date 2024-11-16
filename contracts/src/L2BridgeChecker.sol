@@ -12,15 +12,39 @@ interface IERC20 {
 }
 
 contract L2BridgeChecker {
-    address constant L1_BLOCKS_ADDRESS = 0x5300000000000000000000000000000000000001;
-    address constant L1_SLOAD_ADDRESS = 0x0000000000000000000000000000000000000101;
+    address constant L1_BLOCKS_ADDRESS =
+        0x5300000000000000000000000000000000000001;
+    address constant L1_SLOAD_ADDRESS =
+        0x0000000000000000000000000000000000000101;
     address immutable l1BridgeAddress;
 
-    // Mapping: L1 Token -> L2 Token
-    mapping(address => address) public tokenMappings;
+    struct Migration {
+        address l1Token;
+        address l2Token;
+        address rewardsToken;
+        uint256 bridgeMultiplier;
+        uint256 holdMultiplier;
+        uint256 startTimestamp;
+        uint256 endTimestamp;
+    }
 
-    event TokenMapped(address indexed l1Token, address indexed l2Token);
-    event TokensMinted(address indexed l1Token, address indexed l2Token, address indexed user, uint256 amount);
+    mapping(address => Migration) public migrations;
+
+    event MigrationRegistered(
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed rewardsToken,
+        uint256 bridgeMultiplier,
+        uint256 holdMultiplier,
+        uint256 startTimestamp,
+        uint256 endTimestamp
+    );
+    event TokensMinted(
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed user,
+        uint256 amount
+    );
     event L2TokenDeployed(address indexed l2Token, string name, string symbol);
 
     constructor(address _l1BridgeAddress) {
@@ -29,16 +53,48 @@ contract L2BridgeChecker {
     }
 
     /**
-     * @dev Map an L1 token to an L2 token.
+     * @dev Register a migration with detailed configuration.
      * @param l1Token The address of the token on L1.
      * @param l2Token The address of the corresponding token on L2.
+     * @param rewardsToken The address of the rewards token.
+     * @param bridgeMultiplier Multiplier for bridge rewards (in wei).
+     * @param holdMultiplier Multiplier for holding rewards (in wei).
+     * @param startTimestamp Start of the migration window.
+     * @param endTimestamp End of the migration window.
      */
-    function mapToken(address l1Token, address l2Token) external {
-        require(l1Token != address(0) && l2Token != address(0), "Invalid token address");
-        require(tokenMappings[l1Token] == address(0), "Token already mapped");
-        tokenMappings[l1Token] = l2Token;
+    function registerMigration(
+        address l1Token,
+        address l2Token,
+        address rewardsToken,
+        uint256 bridgeMultiplier,
+        uint256 holdMultiplier,
+        uint256 startTimestamp,
+        uint256 endTimestamp
+    ) external {
+        require(l1Token != address(0), "Invalid L1 token address");
+        require(l2Token != address(0), "Invalid L2 token address");
+        require(rewardsToken != address(0), "Invalid rewards token address");
+        require(startTimestamp < endTimestamp, "Invalid migration time window");
 
-        emit TokenMapped(l1Token, l2Token);
+        migrations[l1Token] = Migration({
+            l1Token: l1Token,
+            l2Token: l2Token,
+            rewardsToken: rewardsToken,
+            bridgeMultiplier: bridgeMultiplier,
+            holdMultiplier: holdMultiplier,
+            startTimestamp: startTimestamp,
+            endTimestamp: endTimestamp
+        });
+
+        emit MigrationRegistered(
+            l1Token,
+            l2Token,
+            rewardsToken,
+            bridgeMultiplier,
+            holdMultiplier,
+            startTimestamp,
+            endTimestamp
+        );
     }
 
     /**
@@ -89,13 +145,20 @@ contract L2BridgeChecker {
      * @param user The address of the user.
      * @return The amount of locked funds.
      */
-    function getLockedFundsFromL1(address l1Token, address user) public view returns (uint256) {
+    function getLockedFundsFromL1(
+        address l1Token,
+        address user
+    ) public view returns (uint256) {
         // Calculate the storage slot: keccak256(abi.encodePacked(user, keccak256(abi.encodePacked(token, slot))))
         uint256 slot = uint256(
             keccak256(
                 abi.encodePacked(
                     uint(uint160(user)),
-                    uint(keccak256(abi.encodePacked(uint(uint160(l1Token)), uint256(0))))
+                    uint(
+                        keccak256(
+                            abi.encodePacked(uint(uint160(l1Token)), uint256(0))
+                        )
+                    )
                 )
             )
         );
@@ -104,7 +167,9 @@ contract L2BridgeChecker {
         bytes memory input = abi.encodePacked(l1BridgeAddress, slot);
 
         // Perform the L1SLOAD call
-        (bool success, bytes memory result) = L1_SLOAD_ADDRESS.staticcall(input);
+        (bool success, bytes memory result) = L1_SLOAD_ADDRESS.staticcall(
+            input
+        );
         require(success, "L1SLOAD failed");
 
         // Decode the result as a uint256
@@ -112,22 +177,42 @@ contract L2BridgeChecker {
     }
 
     /**
-     * @dev Mint bridged tokens on L2 based on locked funds on L1.
+     * @dev Mint bridged tokens and rewards on L2 based on locked funds on L1.
      * @param l1Token The address of the token on L1.
      * @param user The address of the user to mint tokens for.
      */
     function mint(address l1Token, address user) external {
         require(user != address(0), "Invalid user address");
 
-        address l2Token = tokenMappings[l1Token];
-        require(l2Token != address(0), "L2 token not mapped");
+        Migration memory migration = migrations[l1Token];
+        require(migration.l2Token != address(0), "Migration not registered");
+
+        require(
+            block.timestamp >= migration.startTimestamp &&
+                block.timestamp <= migration.endTimestamp,
+            "Migration window closed"
+        );
 
         uint256 lockedAmount = getLockedFundsFromL1(l1Token, user);
         require(lockedAmount > 0, "No funds locked on L1");
 
-        IERC20(l2Token).mint(user, lockedAmount);
+        // Calculate bridge rewards
+        uint256 rewards = (lockedAmount * migration.bridgeMultiplier) / 1e18;
 
-        emit TokensMinted(l1Token, l2Token, user, lockedAmount);
+        // Mint the bridged tokens
+        IERC20(migration.l2Token).mint(user, lockedAmount);
+
+        // Mint the rewards tokens (if different)
+        if (migration.rewardsToken != migration.l2Token) {
+            IERC20(migration.rewardsToken).mint(user, rewards);
+        }
+
+        emit TokensMinted(
+            l1Token,
+            migration.l2Token,
+            user,
+            lockedAmount + rewards
+        );
     }
 
     /**
@@ -135,7 +220,10 @@ contract L2BridgeChecker {
      * @param name The name of the L2 token.
      * @param symbol The symbol of the L2 token.
      */
-    function deployBridgedToken(string memory name, string memory symbol) external {
+    function deployBridgedToken(
+        string memory name,
+        string memory symbol
+    ) external {
         address l2Token = address(new BridgedToken(name, symbol));
         emit L2TokenDeployed(l2Token, name, symbol);
     }
