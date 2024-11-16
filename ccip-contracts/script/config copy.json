@@ -1,0 +1,17 @@
+{
+  "BnMToken": {
+    "name": "Migratoooor Test Token",
+    "symbol": "MTT",
+    "decimals": 18,
+    "initialSupply": 0,
+    "withGetCCIPAdmin": false,
+    "ccipAdminAddress": "0x0000000000000000000000000000000000000000"
+  },
+  "tokenAmountToMint": 1000000000000000000000,
+  "tokenAmountToTransfer": 10000,
+  "feeType": "native",
+  "remoteChains": {
+    "534351": 421614,
+    "421614": 534351
+  }
+}
