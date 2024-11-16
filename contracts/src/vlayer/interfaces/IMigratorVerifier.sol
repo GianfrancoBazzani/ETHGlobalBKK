@@ -15,4 +15,6 @@ interface IMigratorVerifier {
     error BonusRangesArrayIsEmpty();
     error InvalidState();
     error FirsRangeStartAmountMustBeZero();
+    error L1MigratorMustBeNotZero();
+    error UserAlreadyMigrated();
 }
