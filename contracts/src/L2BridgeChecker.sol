@@ -49,6 +49,41 @@ contract L2BridgeChecker {
     }
 
     /**
+     * @dev Calculate the first-level storage slot for a token in the `lockedFunds` mapping.
+     * This function computes the hash of the token address and the root slot (0 in this case).
+     *
+     * The calculation follows the Solidity storage layout rules for mappings:
+     * keccak256(abi.encodePacked(key, root_slot))
+     *
+     * @param token The address of the token.
+     * @return bytes32 The calculated first-level storage slot.
+     */
+    function _calculateFirstLevelSlot(
+        address token
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(token, uint256(0)));
+    }
+
+    /**
+     * @dev Calculate the second-level storage slot for a user in the `lockedFunds` mapping.
+     * This function computes the hash of the user address and the first-level slot.
+     *
+     * The calculation follows the Solidity storage layout rules for nested mappings:
+     * keccak256(abi.encodePacked(inner_key, keccak256(abi.encodePacked(outer_key, root_slot))))
+     *
+     * @param token The address of the token (outer mapping key).
+     * @param user The address of the user (inner mapping key).
+     * @return bytes32 The calculated second-level storage slot.
+     */
+    function _calculateSecondLevelSlot(
+        address token,
+        address user
+    ) public pure returns (bytes32) {
+        bytes32 firstLevelSlot = _calculateFirstLevelSlot(token);
+        return keccak256(abi.encodePacked(user, firstLevelSlot));
+    }
+
+    /**
      * @dev Get locked funds from L1 for a specific token and user.
      * @param l1Token The address of the token on L1.
      * @param user The address of the user.
@@ -56,8 +91,14 @@ contract L2BridgeChecker {
      */
     function getLockedFundsFromL1(address l1Token, address user) public view returns (uint256) {
         // Calculate the storage slot: keccak256(abi.encodePacked(user, keccak256(abi.encodePacked(token, slot))))
-        uint256 slot =
-            uint256(keccak256(abi.encodePacked(user, uint256(keccak256(abi.encodePacked(l1Token, uint256(0)))))));
+        uint256 slot = uint256(
+            keccak256(
+                abi.encodePacked(
+                    uint(uint160(user)),
+                    uint(keccak256(abi.encodePacked(uint(uint160(l1Token)), uint256(0))))
+                )
+            )
+        );
 
         // Prepare the input for the L1SLOAD call
         bytes memory input = abi.encodePacked(l1BridgeAddress, slot);

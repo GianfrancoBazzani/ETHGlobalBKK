@@ -9,6 +9,6 @@ contract MigratorVerifier is Verifier {
 
     function claimWhale(Proof calldata, address claimer, uint256 balance)
         public
-        onlyVerified(prover, MigratorProver.balance.selector)
+        onlyVerified(prover, MigratorProver.averageBalance.selector)
     {}
 }
