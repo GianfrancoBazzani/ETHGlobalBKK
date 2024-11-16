@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {BridgedToken} from "./BridgedToken.sol";
+
 interface IL1Blocks {
     function latestBlockNumber() external view returns (uint256);
 }
@@ -22,9 +24,11 @@ contract L2BridgeChecker {
     event TokenMapped(address indexed l1Token, address indexed l2Token);
     event TokensMinted(
         address indexed l1Token,
+        address indexed l2Token,
         address indexed user,
         uint256 amount
     );
+    event L2TokenDeployed(address indexed l2Token, string name, string symbol);
 
     constructor(address _l1BridgeAddress) {
         require(_l1BridgeAddress != address(0), "L1 Bridge address is zero");
@@ -103,6 +107,18 @@ contract L2BridgeChecker {
 
         IERC20(l2Token).mint(user, lockedAmount);
 
-        emit TokensMinted(l1Token, user, lockedAmount);
+        emit TokensMinted(l1Token, l2Token, user, lockedAmount);
     }
+
+    /**
+     * @dev Deploys a token on L2 that acts as a wrapper for a specified L1 token.
+     * @param name The name of the L2 token.
+     * @param symbol The symbol of the L2 token.
+     */
+    function deployBridgedToken(string memory name, string memory symbol) external {
+        address l2Token = address(new BridgedToken(name, symbol));
+        emit L2TokenDeployed(l2Token, name, symbol);
+    }
+
+    
 }

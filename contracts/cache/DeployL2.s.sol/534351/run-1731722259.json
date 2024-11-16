@@ -1,0 +1,7 @@
+{
+  "transactions": [
+    {
+      "rpc": "wss://scroll-sepolia-rpc.publicnode.com"
+    }
+  ]
+}
