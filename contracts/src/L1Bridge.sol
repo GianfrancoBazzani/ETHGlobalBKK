@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.28;
 
 interface IERC20 {
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 
     function balanceOf(address account) external view returns (uint256);
 }
@@ -15,11 +11,7 @@ contract L1Bridge {
     // Mapping: token address => user address => amount locked
     mapping(address => mapping(address => uint256)) public lockedFunds;
 
-    event FundsLocked(
-        address indexed token,
-        address indexed user,
-        uint256 amount
-    );
+    event FundsLocked(address indexed token, address indexed user, uint256 amount);
 
     /**
      * @dev Lock ERC20 tokens for bridging to L2.
@@ -45,10 +37,7 @@ contract L1Bridge {
      * @param user Address of the user.
      * @return Locked balance of the user for the specified token.
      */
-    function getLockedFunds(
-        address token,
-        address user
-    ) external view returns (uint256) {
+    function getLockedFunds(address token, address user) external view returns (uint256) {
         return lockedFunds[token][user];
     }
 }

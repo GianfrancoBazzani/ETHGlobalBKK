@@ -2,6 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib", "dependencies"]
+solc = "0.8.28"
 
 [[profile.default.fs_permissions]]
 access = "read"
@@ -16,4 +17,3 @@ forge-std = "1.9.4"
 "@openzeppelin-contracts" = "5.1.0"
 vlayer = "0.1.0-nightly-20241115-70dfc11"
 risc0-ethereum = { version = "1.0.0", url = "https://github.com/vlayer-xyz/risc0-ethereum/releases/download/v1.0.0-soldeer-no-remappings/contracts.zip" }
-# fs_permissions = [{ access = "read", path = "./testdata"}]
