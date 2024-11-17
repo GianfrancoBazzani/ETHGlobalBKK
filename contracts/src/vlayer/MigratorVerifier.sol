@@ -227,11 +227,15 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         return userMigrationInformation[user];
     }
 
-    function getStartMigrationTimestamp() external returns (uint256) {
+    function getStartMigrationTimestamp() external view returns (uint256) {
         return startMigrationTimestamp;
     }
 
-    function getEndMigrationTimestamp() external returns (uint256) {
+    function getEndMigrationTimestamp() external view returns (uint256) {
         return endMigrationTimestamp;
+    }
+
+    function getProver() external view returns (address) {
+        return prover;
     }
 }
