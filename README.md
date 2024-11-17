@@ -1,7 +1,7 @@
 # MigratoOoR!
 
-Please, see the Demo Video through the following link: https://youtu.be/1VlyXPb4ag8
-Deployed website: https://ethglobal-bkk-eth-belgrade.vercel.app/
+- Please, see the [Demo Video through this link](https://www.youtube.com/watch?v=1VlyXPb4ag8) 
+- [Deployed website](https://ethglobal-bkk-eth-belgrade.vercel.app/)
 
 ## Migrate your community to Scroll and unlock a universe of efficiency.
 
