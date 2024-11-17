@@ -15,20 +15,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import "./globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import Link from "next/link";
-
-import { defineChain } from "viem";
-
-export const scrollDevnet = defineChain({
-    id: 2227728,
-    name: "Scroll Devnet",
-    nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: {
-        default: { http: ["https://l1sload-rpc.scroll.io"] },
-    },
-    blockExplorers: {
-        default: { name: "BLockscout", url: "https://l1sload-blockscout.scroll.io" },
-    }
-});
+import { scrollDevnet } from "./lib/chains";
 
 const config = getDefaultConfig({
     appName: "My RainbowKit App",
