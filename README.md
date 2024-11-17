@@ -1,5 +1,8 @@
 # MigratoOoR!
 
+Please, see the Demo Video through the following link: https://youtu.be/1VlyXPb4ag8
+Deployed website: https://ethglobal-bkk-eth-belgrade.vercel.app/
+
 ## Migrate your community to Scroll and unlock a universe of efficiency.
 
 MigratoOoR! is a tool that allows projects to migrate their token supply from Mainnet to Scroll, while offering incentives to long-time holders and early adopters through token rewards. With MigratoOoR!, projects can embrace Ethereum's rollup-centric scalability vision, utilizing Scroll's cost-efficient and high-performance infrastructure.
