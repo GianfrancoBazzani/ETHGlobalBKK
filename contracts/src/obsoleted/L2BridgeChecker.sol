@@ -180,8 +180,8 @@ contract L2BridgeChecker {
      * @param name The name of the L2 token.
      * @param symbol The symbol of the L2 token.
      */
-    function deployBridgedToken(string memory name, string memory symbol) external {
-        address l2Token = address(new BridgedToken(name, symbol));
+    function deployBridgedToken(address owner, string memory name, string memory symbol) external {
+        address l2Token = address(new BridgedToken(owner, name, symbol));
         emit L2TokenDeployed(l2Token, name, symbol);
     }
 }
