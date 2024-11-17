@@ -2,34 +2,99 @@
 
 ## Migrate your community to Scroll and unlock a universe of efficiency.
 
-MigratoOoR! is a tool to migrate a project's token supply from Mainnet to Scroll with the possibility to reward long-time holders and early migrators through token incentives.
+MigratoOoR! is a tool that allows projects to migrate their token supply from Mainnet to Scroll, while offering incentives to long-time holders and early adopters through token rewards. With MigratoOoR!, projects can embrace Ethereum's rollup-centric scalability vision, utilizing Scroll's cost-efficient and high-performance infrastructure.
 
-### Testnet Addresses
-TODO: ADD addresses
+##### Table of Contents
 
+[Overview](#overview)
 
-### Project description
-MigratoOoR! is a tool that offers a simple framwork for projects who originally launched their tokens on Ethereum L1 to easily migrate their governance token to Scroll L2 in a trustless manner. Projects that initially launched their tokens on Ethereum L1 can take advantage of the lower costs and increased throughput of the Scroll rollup network, all while preserving Ethereum L1's security as a settlement layer and helping to alleviate network congestion.
+[Key Features](#key-features)
 
-A token migration includes the following steps:
-* Migration Proposal: Protocol operators deploy a new governance ERC20 token on Scroll L2 through the MigratoOoR! dashboard and creates a migration proposal in MigratoOor! bridge contract. This token will be minted by the L1 -> L2 bridge as tokens migrate from L1.
-* Migration Process: From a certain point in time the users can start to migrate the tokens through MigratoOoR! bridge in a trust-less manner.
-* Rewards Distribution: As an additional configurable option, protocol operators can execute a final step of rewards distribution among the holders. These rewards are configurable through the MigratoOoR! dashboard and can incentivize users for early migrations and long-term holding.
+[Technical Details](#technical-details)
 
-Hosting the token's canonical supply on an L2 offers transaction cost benefits for both users and the project's team. It can also serve as an excellent way to align with Ethereum's rollup-centric scaling roadmap, particularly with Scroll's values and technical features. LDR; MigratoOoR! provides projects using our protocol with a decentralized, L2-native alternative to their pre-migration infrastructure setup.
+[Testnet Contracts](#testnet-contracts)
 
-### The problem that MigratoOoR! solves
+[Notable Components](#notable-components)
+
+[Images](#images)
+
+---
+
+### Background
+
+MigratoOoR! was developed as part of the ETHGlobal Bangkok 2024 Hackathon by **Team Migrator ETHBelgrade**. The project showcases the potential of Ethereum rollups and their alignment with Ethereum’s rollup-centric roadmap. It was designed to tackle token migration challenges while leveraging cutting-edge L1 and L2 technologies, including Scroll and vlayer.
+
+---
+
+### Overview
+
+MigratoOoR! simplifies the process of migrating a governance token from Ethereum L1 to Scroll L2 while maintaining Ethereum's robust security guarantees. It leverages Scroll's advanced technology to reduce costs and enable scalability.
+
+Steps in the Migration:
+
+1. Migration Proposal: Protocol operators deploy a new governance ERC20 token on Scroll L2 via the MigratoOoR! dashboard and configure the migration.
+2. Migration Process: Users migrate their tokens from Ethereum L1 to Scroll L2 via a trustless bridge, locking tokens in the L1 contract and minting them in the L2.
+3. Rewards Distribution: Protocol operators can distribute rewards to incentivize early migration and long-term token holding using the MigratoOoR! rewards system.
+4. Hosting the canonical token supply on Scroll L2 brings significant transaction cost reductions and aligns projects with Ethereum's rollup roadmap.
+
+### Key Features
+
+#### The problem that MigratoOoR! solves
+
 MigratoOoR! addresses several key challenges faced by projects that initially launched their tokens on Ethereum Layer 1 (L1):
+
 1. High Transaction Costs on Ethereum L1 -> Lower Price Scroll L2 transactions.
 2. Scalability Bottlenecks -> Alleviate network congestion by migrating dao related computation to Scroll L2.
 3. Complex Token Migration -> Standard Token Migration Framework.
-5. Limited Interoperability -> Use of Chainlink's CCIP CCT to make te new governance token in Scroll multichain.
+4. Limited Interoperability -> Use of Chainlink's CCIP CCT to make te new governance token in Scroll multichain.
 
 Tokens deployed solely on Ethereum L1 are restricted in terms of multichain interoperability. Projects need solutions to enable cross-chain functionality while maintaining the token's core features and security.
 
 ### Technical details
+
 To construct a trustless L1 -> L2 bridge for token migrations, MigratoOoR! leverages Scroll's new L1SLOAD precompile, which allows users to verify token locks in the L1 bridge contract.
 
 In the rewards distribution system MigratoOoR! migrator uses Vlayer time travel feature to compute and verify in Scroll L2 the amount of rewards acquired by long therm holding the tokens.
 
 To introduce multichain functionality for the new token on Scroll, protocol owners can opt to deploy it as a Chainlink Cross-Chain Token, unlocking enhanced interoperability across multiple chains.
+
+### Notable Components
+
+- **L1 and L2 Contracts**: Core smart contracts for bridging and migration.
+- **Frontend**: React-based interface to interact with the bridge.
+- **Vlayer Integration**: Off-chain reward calculation and verification tools.
+
+### Testnet Contracts
+
+- **L1 Bridge Contract** (Token Locking): [0xa2969e30ff87ffd5fd5529a54c8ce95c0b86e51b](https://sepolia.etherscan.io/address/0xa2969e30ff87ffd5fd5529a54c8ce95c0b86e51b)
+- **L2 Bridge Contract** (Token Minting): [0xaF5F991e11181E268F8a1e89a4aB84B1e5713FF8](https://l1sload-blockscout.scroll.io/address/0xaF5F991e11181E268F8a1e89a4aB84B1e5713FF8)
+- **L2 Wrapped USDC**: [0x0468880bE4970DBab8c9aBE52D9063050652b8db](https://l1sload-blockscout.scroll.io/address/0x0468880bE4970DBab8c9aBE52D9063050652b8db)
+- **Rewards Contract**: [0x67d2d3a45457b69259FB1F8d8178bAE4F6B11b4d](https://l1sload-blockscout.scroll.io/address/0x67d2d3a45457b69259FB1F8d8178bAE4F6B11b4d)
+
+## Images
+
+Below are visuals demonstrating the MigratoOoR! flow and dashboard:
+
+### 1. Implementation Overview
+
+![Implementation Overview](https://raw.githubusercontent.com/GianfrancoBazzani/ETHGlobalBKK/refs/heads/main/ressources/implementation.png)
+
+### 2. Project Architecture
+
+![Project Arch](https://raw.githubusercontent.com/GianfrancoBazzani/ETHGlobalBKK/refs/heads/main/ressources/project.png)
+
+### 3. Welcome Page
+
+![Welcome](https://raw.githubusercontent.com/GianfrancoBazzani/ETHGlobalBKK/refs/heads/main/ressources/welcome.png)
+
+### 4. Migration Flow
+
+![Migration](https://raw.githubusercontent.com/GianfrancoBazzani/ETHGlobalBKK/refs/heads/main/ressources/migration_full.png)
+
+### 5. Bridge Process
+
+![Bridge](https://raw.githubusercontent.com/GianfrancoBazzani/ETHGlobalBKK/refs/heads/main/ressources/bridge.png)
+
+### 6. Rewards Distribution
+
+![Rewards](https://raw.githubusercontent.com/GianfrancoBazzani/ETHGlobalBKK/refs/heads/main/ressources/rewards.png)
