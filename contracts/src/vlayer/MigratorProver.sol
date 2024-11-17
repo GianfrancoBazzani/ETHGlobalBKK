@@ -28,11 +28,6 @@ contract MigratorProver is Prover, IMigratorProver {
             AccountingStartBlockMustBeInThePast(_startBlockForAccounting, _endBlockForAccounting)
         );
 
-        // Check that the token has been deployed at the moment of {_startBlockForAccounting}
-        verifyTokenExistenceAtTheBlock(_migratedToken, _startBlockForAccounting);
-        // Check that token wasn't destructed after the start of accounting block
-        verifyTokenExistenceAtTheBlock(_migratedToken, _endBlockForAccounting);
-
         migratedToken = _migratedToken;
         startBlockForAccounting = _startBlockForAccounting;
         endBlockForAccounting = _endBlockForAccounting;
@@ -41,6 +36,10 @@ contract MigratorProver is Prover, IMigratorProver {
 
     function averageBalance(address user) external returns (Proof memory, address, uint256) {
         require(user != address(0), UserCantBeZero());
+
+        // Verify that token was presented on the chain at the start and the end
+        verifyTokenExistenceAtTheBlock(migratedToken, startBlockForAccounting);
+        verifyTokenExistenceAtTheBlock(migratedToken, endBlockForAccounting);
 
         uint256 cumulativeBalance;
 
