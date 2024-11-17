@@ -24,8 +24,8 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
 
     // *** Constants & Immutables *** \\\
     uint256 private constant LOCKED_VALUE_BY_USER_SLOT = 0;
-    uint256 private constant ONE_SCALED = 1e18;
     uint256 private constant MINIMAL_MIGRATION_DURATION = 1 days;
+    uint256 private constant ONE_SCALED = 1e18;
 
     address private immutable prover;
     address private immutable l1Migrator;
@@ -111,15 +111,16 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         require(!userMigrationInformation[msg.sender].isMigrated, UserAlreadyMigrated());
         require(endMigrationTimestamp > block.timestamp, BonusMigrationEnded());
 
+        // Get all incentive bonuses
         uint256 timeBonus = getUserTimeBonus(averageBalance);
         uint256 loyaltyBonus = getUserLoyaltyBonus(averageBalance);
 
-        uint256 l1LockedAmount = uint256(
-            ScrollL1StorageReader.sloadValueFromSecondLevelSlot(l1Migrator, LOCKED_VALUE_BY_USER_SLOT, uint160(user))
-        );
+        // Use L1SLOAD precompile to get the amount of tokens locked on L1
+        uint256 l1LockedAmount = getL1LockedAmount(user);
 
-        // Invariant should never happen
         uint256 usedLockedAmount = userMigrationInformation[msg.sender].usedLockedAmount;
+
+        // Invariant should never be reached
         assert(l1LockedAmount >= usedLockedAmount);
 
         uint256 l1AdjustedAmount = l1LockedAmount - usedLockedAmount;
@@ -128,7 +129,22 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         userMigrationInformation[msg.sender].isMigrated = true;
         userMigrationInformation[msg.sender].usedLockedAmount += SafeCast.toUint248(l1AdjustedAmount);
 
+        emit UserMigrated(msg.sender, averageBalance, totalAmountToSend);
+
+        // CEI
         l2Token.safeTransfer(msg.sender, totalAmountToSend);
+    }
+
+    function bridgeTokens() external {
+        uint256 l1LockedAmount = getL1LockedAmount(msg.sender);
+        uint256 diff = l1LockedAmount - userMigrationInformation[msg.sender].usedLockedAmount;
+        require(diff > 0, NoTokensToBridge());
+
+        userMigrationInformation[msg.sender].usedLockedAmount += SafeCast.toUint248(diff);
+        emit TokensBridged(msg.sender, diff);
+
+        // CEI
+        l2Token.safeTransfer(msg.sender, diff);
     }
 
     // *** Private View Functions *** \\\
@@ -176,12 +192,8 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
 
     // *** External & Public Getter Functions *** \\\
 
-    function getBonusRanges() external view returns (BonusRange[] memory) {
-        return bonusRanges;
-    }
-
-    function getUserInformation(address user) external view returns (UserInfo memory) {
-        return userMigrationInformation[user];
+    function getL2Token() external view returns (address) {
+        return address(l2Token);
     }
 
     function getUserTimeBonus(uint256 usersAverageBalance) public view returns (uint256) {
@@ -199,5 +211,27 @@ contract MigratorVerifier is Verifier, IMigratorVerifier {
         uint256 fraction = (numerator / totalMigrationDuration) / ONE_SCALED;
 
         return ONE_SCALED + fraction;
+    }
+
+    function getL1LockedAmount(address user) public view returns (uint256) {
+        return uint256(
+            ScrollL1StorageReader.sloadValueFromSecondLevelSlot(l1Migrator, LOCKED_VALUE_BY_USER_SLOT, uint160(user))
+        );
+    }
+
+    function getBonusRanges() external view returns (BonusRange[] memory) {
+        return bonusRanges;
+    }
+
+    function getUserInformation(address user) external view returns (UserInfo memory) {
+        return userMigrationInformation[user];
+    }
+
+    function getStartMigrationTimestamp() external returns (uint256) {
+        return startMigrationTimestamp;
+    }
+
+    function getEndMigrationTimestamp() external returns (uint256) {
+        return endMigrationTimestamp;
     }
 }

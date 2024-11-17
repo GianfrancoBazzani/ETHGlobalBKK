@@ -4,6 +4,11 @@ pragma solidity 0.8.28;
 import {Proof} from "vlayer-0.1.0/Proof.sol";
 
 interface IMigratorVerifier {
+    //*** Events ***\\\
+    event TokensBridged(address indexed user, uint256 amount);
+    event UserMigrated(address indexed user, uint256 averageBalance, uint256 totalAmountClaimed);
+
+    //*** Errors ***\\\
     error ZeroBaseMultiplier();
     error InvalidMigrationStart(uint256 currentBlockNumber, uint256 providedBlockNumber);
     error InvalidMigrationEnd(uint256 startBlockNumber, uint256 endBlockNumber);
@@ -17,4 +22,5 @@ interface IMigratorVerifier {
     error FirsRangeStartAmountMustBeZero();
     error L1MigratorMustBeNotZero();
     error UserAlreadyMigrated();
+    error NoTokensToBridge();
 }
