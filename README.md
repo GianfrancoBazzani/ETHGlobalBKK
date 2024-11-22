@@ -2,6 +2,7 @@
 
 - Please, see the [Demo Video through this link](https://www.youtube.com/watch?v=1VlyXPb4ag8) 
 - [Deployed website](https://ethglobal-bkk-eth-belgrade.vercel.app/)
+- ETHGlobal Bangkok 2024 [submission](https://ethglobal.com/showcase/migrator-ethbelgrade-7x4pc)
 
 ## Migrate your community to Scroll and unlock a universe of efficiency.
 
@@ -31,14 +32,12 @@ MigratoOoR! was developed as part of the ETHGlobal Bangkok 2024 Hackathon by **T
 
 ### Overview
 
-MigratoOoR! simplifies the process of migrating a governance token from Ethereum L1 to Scroll L2 while maintaining Ethereum's robust security guarantees. It leverages Scroll's advanced technology to reduce costs and enable scalability.
+MigratoOoR! simplifies the process of migrating a governance token from Ethereum L1 to Scroll L2 while maintaining Ethereum's robust security guarantees. It leverages Scroll's advanced technology to reduce costs and enhance scalability.
 
-Steps in the Migration:
-
-1. Migration Proposal: Protocol operators deploy a new governance ERC20 token on Scroll L2 via the MigratoOoR! dashboard and configure the migration.
+1. Migration Deployment: Protocol operators deploy a new ERC20 token on Scroll L2 (or instantiate an existing one) via the MigratoOoR! dashboard, which offers customizable parameters for any preferred configuration.
 2. Migration Process: Users migrate their tokens from Ethereum L1 to Scroll L2 via a trustless bridge, locking tokens in the L1 contract and minting them in the L2.
 3. Rewards Distribution: Protocol operators can distribute rewards to incentivize early migration and long-term token holding using the MigratoOoR! rewards system.
-4. Hosting the canonical token supply on Scroll L2 brings significant transaction cost reductions and aligns projects with Ethereum's rollup roadmap.
+4. Hosting the canonical token supply on Scroll L2 brings significant transaction cost reductions and aligns projects with Ethereum's scaling roadmap.
 
 ### Key Features
 
@@ -51,21 +50,21 @@ MigratoOoR! addresses several key challenges faced by projects that initially la
 3. Complex Token Migration -> Standard Token Migration Framework.
 4. Limited Interoperability -> Use of Chainlink's CCIP CCT to make te new governance token in Scroll multichain.
 
-Tokens deployed solely on Ethereum L1 are restricted in terms of multichain interoperability. Projects need solutions to enable cross-chain functionality while maintaining the token's core features and security.
 
 ### Technical details
 
-To construct a trustless L1 -> L2 bridge for token migrations, MigratoOoR! leverages Scroll's new L1SLOAD precompile, which allows users to verify token locks in the L1 bridge contract.
+To construct a trustless L1 -> L2 bridge for token migrations, MigratoOoR! leverages Scroll's new L1SLOAD precompile, which allows for verification of token locks in the L1 bridge contract.
 
-In the rewards distribution system MigratoOoR! migrator uses Vlayer time travel feature to compute and verify in Scroll L2 the amount of rewards acquired by long therm holding the tokens.
+In the rewards distribution system MigratoOoR! uses Vlayer's time travel feature to compute and verify each user's token-holding history, transparently ensuring that the proper rewards are acquired in Scroll L2 by long term holding the  the tokens.
 
-To introduce multichain functionality for the new token on Scroll, protocol owners can opt to deploy it as a Chainlink Cross-Chain Token, unlocking enhanced interoperability across multiple chains.
+To introduce multichain functionality for the new token on Scroll a cross-chain solution using Chainlink's CCIP has been integrated, protocol owners can opt to deploy it as a Chainlink Cross-Chain Token.
 
 ### Notable Components
 
 - **L1 and L2 Contracts**: Core smart contracts for bridging and migration.
 - **Frontend**: React-based interface to interact with the bridge.
 - **Vlayer Integration**: Off-chain reward calculation and verification tools.
+- **CCIP Integration**: Contracts and rerouting to showcase cross-chain functionality.
 
 ### Testnet Contracts
 
